@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -70,25 +70,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
         ))}
       </nav>
 
-      {/* Role Switch */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-t border-gray-100">
-          <div className="flex gap-1">
-            <button
-              onClick={() => switchRole('patient')}
-              className={`flex-1 text-xs py-2 rounded-lg font-medium transition-all ${user?.role === 'patient' ? 'bg-primary-100 text-primary-700' : 'text-gray-400 hover:bg-gray-50'}`}
-            >
-              Patient
-            </button>
-            <button
-              onClick={() => switchRole('admin')}
-              className={`flex-1 text-xs py-2 rounded-lg font-medium transition-all ${user?.role === 'admin' ? 'bg-primary-100 text-primary-700' : 'text-gray-400 hover:bg-gray-50'}`}
-            >
-              Admin
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* User & Logout */}
       <div className="p-4 border-t border-gray-100">
