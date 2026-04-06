@@ -352,7 +352,7 @@ const Appointments = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  {isAdmin && <th className="p-4 font-semibold">Patient ID</th>}
+                  {isAdmin && <th className="p-4 font-semibold">Patient</th>}
                   <th className="p-4 font-semibold">Doctor</th>
                   <th className="p-4 font-semibold">Department</th>
                   <th className="p-4 font-semibold">Date & Time</th>
@@ -363,7 +363,10 @@ const Appointments = () => {
               <tbody className="divide-y divide-gray-100">
                 {appointments.map(appt => (
                   <tr key={appt.id} className="hover:bg-gray-50 transition-colors">
-                    {isAdmin && <td className="p-4 text-sm font-medium text-gray-900">#{appt.patient_id}</td>}
+                    {isAdmin && <td className="p-4 text-sm text-gray-900">
+                      <div className="font-medium">{appt.patient_name || 'N/A'}</div>
+                      <div className="text-xs text-gray-400">ID: #{appt.patient_id}</div>
+                    </td>}
                     <td className="p-4 text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <UserRound className="w-4 h-4 text-gray-400" />

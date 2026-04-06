@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/TopBar';
 import { hospitalAPI, extractData } from '../services/api';
-import { Pill, AlertTriangle, Package, TrendingDown, Plus, Minus, Search, X } from 'lucide-react';
+import { Pill, AlertTriangle, Package, TrendingDown, Plus, Minus, Search, X, Pencil } from 'lucide-react';
 
 const MedicalStore = () => {
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [newMedicine, setNewMedicine] = useState({
     name: '', category: '', manufacturer: '', stock: '', unit_price: '', batch_number: '', expiry_date: '', reorder_level: '', supplier: ''
+  });
+  const [editMedicine, setEditMedicine] = useState({
+    id: null, name: '', category: '', manufacturer: '', stock: '', unit_price: '', batch_number: '', expiry_date: '', reorder_level: '', supplier: ''
   });
 
   const fetchData = async () => {
@@ -33,6 +37,32 @@ const MedicalStore = () => {
       await hospitalAPI.addMedicine(newMedicine);
       setShowAddModal(false);
       setNewMedicine({ name: '', category: '', manufacturer: '', stock: '', unit_price: '', batch_number: '', expiry_date: '', reorder_level: '', supplier: '' });
+      fetchData();
+    } catch (err) { console.error(err); }
+  };
+
+  const openEditModal = (med) => {
+    setEditMedicine({
+      id: med.id,
+      name: med.name || '',
+      category: med.category || '',
+      manufacturer: med.manufacturer || '',
+      stock: med.stock ?? '',
+      unit_price: med.unit_price ?? '',
+      batch_number: med.batch_number || '',
+      expiry_date: med.expiry_date ? med.expiry_date.substring(0, 10) : '',
+      reorder_level: med.reorder_level ?? '',
+      supplier: med.supplier || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditMedicine = async (e) => {
+    e.preventDefault();
+    try {
+      const { id, ...data } = editMedicine;
+      await hospitalAPI.updateMedicine(id, data);
+      setShowEditModal(false);
       fetchData();
     } catch (err) { console.error(err); }
   };
@@ -65,6 +95,69 @@ const MedicalStore = () => {
   const filteredMedicines = medicines.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const lowStock = medicines.filter(m => m.is_low_stock);
   const expired = medicines.filter(m => m.is_expired);
+
+  // Reusable form fields renderer for Add/Edit modals
+  const renderMedicineForm = (formData, setFormData, onSubmit, submitLabel) => (
+    <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Medicine Name</label>
+          <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="Enter name" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Category</label>
+          <input type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="E.g. Antibiotics" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase ml-1">Stock</label>
+            <input required type="number" value={formData.stock} onChange={(e) => setFormData({...formData, stock: e.target.value})}
+              className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="0" />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase ml-1">Unit Price (₹)</label>
+            <input required type="number" value={formData.unit_price} onChange={(e) => setFormData({...formData, unit_price: e.target.value})}
+              className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="0.00" />
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Reorder Level</label>
+          <input type="number" value={formData.reorder_level} onChange={(e) => setFormData({...formData, reorder_level: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="10" />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Manufacturer</label>
+          <input type="text" value={formData.manufacturer} onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="Enter manufacturer" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Supplier</label>
+          <input type="text" value={formData.supplier} onChange={(e) => setFormData({...formData, supplier: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="Enter supplier" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Expiry Date</label>
+          <input type="date" value={formData.expiry_date} onChange={(e) => setFormData({...formData, expiry_date: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" />
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase ml-1">Batch Number</label>
+          <input type="text" value={formData.batch_number} onChange={(e) => setFormData({...formData, batch_number: e.target.value})}
+            className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="E.g. BAT-001" />
+        </div>
+      </div>
+
+      <div className="md:col-span-2 flex justify-end gap-3 mt-4">
+        <button type="button" onClick={() => { setShowAddModal(false); setShowEditModal(false); }} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 border border-gray-200 transition-all">Cancel</button>
+        <button type="submit" className="px-8 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-500/20 transition-all">{submitLabel}</button>
+      </div>
+    </form>
+  );
 
   return (
     <div className="animate-fade-in pb-10">
@@ -138,6 +231,7 @@ const MedicalStore = () => {
                   <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Expiry</th>
                   <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -180,6 +274,15 @@ const MedicalStore = () => {
                        med.is_low_stock ? <span className="badge-warning">Low Stock</span> :
                        <span className="badge-success">In Stock</span>}
                     </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => openEditModal(med)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-all cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -192,7 +295,7 @@ const MedicalStore = () => {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={() => setShowAddModal(false)}></div>
-          <div className="bg-white rounded-3xl p-8 w-full max-w-2xl relative shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-2xl relative shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => setShowAddModal(false)}
               className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
@@ -201,56 +304,25 @@ const MedicalStore = () => {
             </button>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Add New Medicine</h2>
             <p className="text-gray-500 text-sm mb-8">Fill in the details to add medicine to your inventory.</p>
-            
-            <form onSubmit={handleAddMedicine} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Medicine Name</label>
-                  <input required type="text" value={newMedicine.name} onChange={(e) => setNewMedicine({...newMedicine, name: e.target.value})}
-                    className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="Enter name" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Category</label>
-                  <input type="text" value={newMedicine.category} onChange={(e) => setNewMedicine({...newMedicine, category: e.target.value})}
-                    className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="E.g. Antibiotics" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Initial Stock</label>
-                    <input required type="number" value={newMedicine.stock} onChange={(e) => setNewMedicine({...newMedicine, stock: e.target.value})}
-                      className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="0" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase ml-1">Unit Price (₹)</label>
-                    <input required type="number" value={newMedicine.unit_price} onChange={(e) => setNewMedicine({...newMedicine, unit_price: e.target.value})}
-                      className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="0.00" />
-                  </div>
-                </div>
-              </div>
+            {renderMedicineForm(newMedicine, setNewMedicine, handleAddMedicine, 'Add Medicine')}
+          </div>
+        </div>
+      )}
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Manufacturer</label>
-                  <input type="text" value={newMedicine.manufacturer} onChange={(e) => setNewMedicine({...newMedicine, manufacturer: e.target.value})}
-                    className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="Enter manufacturer" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Expiry Date</label>
-                  <input type="date" value={newMedicine.expiry_date} onChange={(e) => setNewMedicine({...newMedicine, expiry_date: e.target.value})}
-                    className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase ml-1">Batch Number</label>
-                  <input type="text" value={newMedicine.batch_number} onChange={(e) => setNewMedicine({...newMedicine, batch_number: e.target.value})}
-                    className="w-full mt-1.5 px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all" placeholder="E.g. BAT-001" />
-                </div>
-              </div>
-
-              <div className="md:col-span-2 flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 border border-gray-200 transition-all">Cancel</button>
-                <button type="submit" className="px-8 py-2.5 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-500/20 transition-all">Add Medicine</button>
-              </div>
-            </form>
+      {/* Edit Medicine Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={() => setShowEditModal(false)}></div>
+          <div className="bg-white rounded-3xl p-8 w-full max-w-2xl relative shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <button 
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Edit Medicine</h2>
+            <p className="text-gray-500 text-sm mb-8">Update the details for <strong>{editMedicine.name}</strong>.</p>
+            {renderMedicineForm(editMedicine, setEditMedicine, handleEditMedicine, 'Save Changes')}
           </div>
         </div>
       )}

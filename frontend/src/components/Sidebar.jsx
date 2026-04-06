@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, CalendarDays, Building2, Package,
   Receipt, CreditCard, TrendingUp, Brain, Bot, Pill,
-  LogOut, ChevronLeft, ChevronRight, Heart, Shield
+  LogOut, ChevronLeft, ChevronRight, Heart, Shield, FileText
 } from 'lucide-react';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -29,6 +29,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     { to: '/medical-store', icon: Pill, label: 'Medical Store' },
     { to: '/appointments', icon: CalendarDays, label: 'Appointments' },
     { to: '/patients', icon: Users, label: 'Patients' },
+    { to: '/reports', icon: FileText, label: 'Reports' },
     { to: '/billing', icon: Receipt, label: 'Billing' },
     { to: '/payments', icon: CreditCard, label: 'Payments' },
     { to: '/finance', icon: TrendingUp, label: 'Finance' },
