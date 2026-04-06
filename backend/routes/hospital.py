@@ -86,6 +86,16 @@ def get_equipment():
     return jsonify({'message': 'Equipment fetched successfully', 'data': {'equipment': [e.to_dict() for e in equip]}})
 
 
+@hospital_bp.route('/staff/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_staff(id):
+    data = request.json
+    staff = Staff.query.get_or_404(id)
+    if 'status' in data:
+        staff.status = data['status']
+    db.session.commit()
+    return jsonify({'message': 'Staff updated successfully', 'data': {'staff': staff.to_dict()}})
+
 @hospital_bp.route('/medicines', methods=['GET'])
 @jwt_required()
 def get_medicines():
@@ -95,6 +105,25 @@ def get_medicines():
 @hospital_bp.route('/medicines/low-stock', methods=['GET'])
 @role_required(['doctor'])
 def get_low_stock_medicines():
-    # Let's say threshold is 100 for now. Using < 100
     meds = Medicine.query.filter(Medicine.stock < 100).all()
     return jsonify({'message': 'Low stock medicines fetched', 'data': {'medicines': [m.to_dict() for m in meds]}})
+
+@hospital_bp.route('/beds/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_bed(id):
+    data = request.json
+    bed = Bed.query.get_or_404(id)
+    if 'status' in data:
+        bed.status = data['status']
+    db.session.commit()
+    return jsonify({'message': 'Bed updated successfully', 'data': {'bed': bed.to_dict()}})
+
+@hospital_bp.route('/equipment/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_equipment(id):
+    data = request.json
+    equip = Equipment.query.get_or_404(id)
+    if 'status' in data:
+        equip.status = data['status']
+    db.session.commit()
+    return jsonify({'message': 'Equipment updated successfully', 'data': {'equipment': equip.to_dict()}})

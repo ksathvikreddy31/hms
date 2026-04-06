@@ -10,25 +10,50 @@ const HospitalOps = () => {
   const [activeTab, setActiveTab] = useState('staff');
   const [loading, setLoading] = useState(true);
 
+  const fetchData = async () => {
+    try {
+      const [staffRes, bedsRes, equipRes] = await Promise.all([
+        hospitalAPI.getStaff(), hospitalAPI.getBeds(), hospitalAPI.getEquipment()
+      ]);
+      setStaff(extractData(staffRes, 'staff') || []);
+      setBeds(extractData(bedsRes, 'beds') || []);
+      setEquipment(extractData(equipRes, 'equipment') || []);
+    } catch (err) { 
+      console.error(err); 
+      setStaff([]);
+      setBeds([]);
+      setEquipment([]);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [staffRes, bedsRes, equipRes] = await Promise.all([
-          hospitalAPI.getStaff(), hospitalAPI.getBeds(), hospitalAPI.getEquipment()
-        ]);
-        setStaff(extractData(staffRes, 'staff') || []);
-        setBeds(extractData(bedsRes, 'beds') || []);
-        setEquipment(extractData(equipRes, 'equipment') || []);
-      } catch (err) { 
-        console.error(err); 
-        setStaff([]);
-        setBeds([]);
-        setEquipment([]);
-      }
-      setLoading(false);
-    };
     fetchData();
   }, []);
+
+  const toggleStaffStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      await hospitalAPI.updateStaff(id, { status: newStatus });
+      setStaff(staff.map(s => s.id === id ? { ...s, status: newStatus } : s));
+    } catch (err) { console.error(err); }
+  };
+
+  const toggleBedStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
+    try {
+      await hospitalAPI.updateBed(id, { status: newStatus });
+      setBeds(beds.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    } catch (err) { console.error(err); }
+  };
+
+  const toggleEquipmentStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'operational' ? 'maintenance' : 'operational';
+    try {
+      await hospitalAPI.updateEquipment(id, { status: newStatus });
+      setEquipment(equipment.map(e => e.id === id ? { ...e, status: newStatus } : e));
+    } catch (err) { console.error(err); }
+  };
 
   const tabs = [
     { id: 'staff', label: 'Staff', icon: Users, count: staff.length },
@@ -41,6 +66,7 @@ const HospitalOps = () => {
       active: 'badge-success', operational: 'badge-success', available: 'badge-success',
       leave: 'badge-warning', maintenance: 'badge-warning',
       inactive: 'badge-danger', occupied: 'badge-danger', retired: 'badge-danger',
+      unavailable: 'badge-danger',
     };
     return map[status] || 'badge-info';
   };
@@ -80,6 +106,7 @@ const HospitalOps = () => {
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Shift</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -100,6 +127,20 @@ const HospitalOps = () => {
                         <td className="px-6 py-4 text-sm text-gray-600">{s.department}</td>
                         <td className="px-6 py-4 text-sm text-gray-600 capitalize">{s.shift}</td>
                         <td className="px-6 py-4"><span className={statusBadge(s.status)}>{s.status}</span></td>
+                        <td className="px-6 py-4">
+                          <button 
+                            onClick={() => toggleStaffStatus(s.id, s.status)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                              s.status === 'active' ? 'bg-emerald-500' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                s.status === 'active' ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -112,15 +153,24 @@ const HospitalOps = () => {
           {activeTab === 'beds' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 animate-slide-up">
               {beds.map((b) => (
-                <div key={b.id} className={`p-4 rounded-xl border-2 text-center transition-all hover:shadow-md cursor-pointer ${
+                <div key={b.id} 
+                  onClick={() => toggleBedStatus(b.id, b.status)}
+                  className={`p-4 rounded-xl border-2 text-center transition-all hover:shadow-md cursor-pointer active:scale-95 group relative ${
                   b.status === 'available' ? 'border-emerald-200 bg-emerald-50' :
                   b.status === 'occupied' ? 'border-rose-200 bg-rose-50' :
+                  b.status === 'unavailable' ? 'border-gray-200 bg-gray-50 opacity-60' :
                   'border-amber-200 bg-amber-50'}`}>
-                  <BedDouble className={`w-6 h-6 mx-auto mb-2 ${
-                    b.status === 'available' ? 'text-emerald-500' : b.status === 'occupied' ? 'text-rose-500' : 'text-amber-500'}`} />
+                  <div className="absolute top-2 right-2">
+                    <div className={`h-2 w-2 rounded-full ${b.status === 'available' ? 'bg-emerald-500' : b.status === 'occupied' ? 'bg-rose-500' : 'bg-gray-400'}`}></div>
+                  </div>
+                  <BedDouble className={`w-6 h-6 mx-auto mb-2 transition-transform group-hover:scale-110 ${
+                    b.status === 'available' ? 'text-emerald-500' : 
+                    b.status === 'occupied' ? 'text-rose-500' : 
+                    b.status === 'unavailable' ? 'text-gray-400' :
+                    'text-amber-500'}`} />
                   <p className="font-bold text-sm text-gray-900">{b.bed_number}</p>
                   <p className="text-xs text-gray-500">{b.ward}</p>
-                  <p className="text-xs text-gray-400 capitalize mt-1">{b.bed_type}</p>
+                  <div className="mt-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{b.status}</div>
                 </div>
               ))}
             </div>
@@ -138,6 +188,7 @@ const HospitalOps = () => {
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Next Maintenance</th>
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -148,6 +199,20 @@ const HospitalOps = () => {
                         <td className="px-6 py-4 text-sm text-gray-600">{e.department}</td>
                         <td className="px-6 py-4"><span className={statusBadge(e.status)}>{e.status}</span></td>
                         <td className="px-6 py-4 text-sm text-gray-600">{e.next_maintenance ? new Date(e.next_maintenance).toLocaleDateString() : 'N/A'}</td>
+                        <td className="px-6 py-4">
+                          <button 
+                            onClick={() => toggleEquipmentStatus(e.id, e.status)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                              e.status === 'operational' ? 'bg-emerald-500' : 'bg-amber-500'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                e.status === 'operational' ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
