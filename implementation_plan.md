@@ -185,3 +185,6 @@ Deployment script: builds frontend, packages backend, deploys to Azure App Servi
 - **Role switching**: Login as patient → switch to admin → verify different dashboard views
 - **Billing flow**: Create appointment → Generate bill → Process payment → Verify finance update
 - **Agent system**: Trigger agent workflow → Verify cascading agent decisions in activity feed
+
+
+This is a premium hospital management system with AI-powered features. The UI should reflect this with a modern, clean design and smooth animations. The system should be easy to use for all roles (patient, admin, doctor) and should provide valuable insights to help manage the hospital more effectively.
