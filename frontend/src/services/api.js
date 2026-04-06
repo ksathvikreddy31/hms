@@ -69,6 +69,10 @@ export const hospitalAPI = {
   updateEquipment: (id, data) => api.put(`/hospital/equipment/${id}`, data),
   getMedicines: () => api.get('/hospital/medicines'),
   addMedicine: (data) => api.post('/hospital/medicines', data),
+  bulkAddMedicines: (formData) => api.post('/hospital/medicines/bulk', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  updateMedicine: (id, data) => api.put(`/hospital/medicines/${id}`, data),
   getExpiringMedicines: () => api.get('/hospital/medicines/expiring'),
 };
 
