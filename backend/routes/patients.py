@@ -14,6 +14,43 @@ def get_patients():
     patients = Patient.query.all()
     return jsonify({'message': 'Patients fetched successfully', 'data': {'patients': [p.to_dict() for p in patients]}})
 
+@patients_bp.route('/register', methods=['POST'])
+@role_required(['doctor'])
+def register_patient():
+    data = request.get_json()
+    email = data.get('email')
+    name = data.get('name', '')
+    password = data.get('password', 'patient123')  # default password
+
+    if not email:
+        return jsonify({'message': 'Email is required', 'data': None}), 400
+
+    if User.query.filter_by(email=email).first():
+        return jsonify({'message': 'Email already exists', 'data': None}), 400
+
+    try:
+        user = User(email=email, name=name, role='patient')
+        user.set_password(password)
+        db.session.add(user)
+        db.session.flush()  # get user.id
+
+        patient = Patient(
+            user_id=user.id,
+            age=data.get('age'),
+            gender=data.get('gender'),
+            blood_group=data.get('blood_group'),
+            dob=data.get('dob'),
+            bmi=data.get('bmi'),
+            allergies=data.get('allergies'),
+            emergency_contact=data.get('emergency_contact')
+        )
+        db.session.add(patient)
+        db.session.commit()
+        return jsonify({'message': 'Patient registered successfully', 'data': {'patient': patient.to_dict()}}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': str(e), 'data': None}), 400
+
 @patients_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def my_profile():
@@ -83,8 +120,13 @@ def update_patient(id):
         return jsonify({'message': 'Access forbidden', 'data': None}), 403
         
     data = request.json
+
+    # Allow admin/doctor to update user name
+    if 'name' in data and patient.user:
+        patient.user.name = data['name']
+
     for key, value in data.items():
-        if hasattr(patient, key) and key not in ['id', 'user_id', 'created_at']:
+        if hasattr(patient, key) and key not in ['id', 'user_id', 'created_at', 'name', 'email']:
             setattr(patient, key, value)
     
     db.session.commit()

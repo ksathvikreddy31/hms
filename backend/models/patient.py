@@ -26,4 +26,6 @@ class Patient(db.Model):
                 'age': self.age, 'gender': self.gender,
                 'blood_group': self.blood_group, 'dob': self.dob, 'bmi': self.bmi,
                 'conditions': json.loads(self.conditions) if self.conditions else [],
+                'allergies': self.allergies,
+                'emergency_contact': self.emergency_contact,
                 'lifestyle': json.loads(self.lifestyle) if self.lifestyle else {}}

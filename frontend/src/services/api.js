@@ -44,6 +44,8 @@ export const patientAPI = {
   getProfile: () => api.get('/patients/profile'),
   updateProfile: (data) => api.put('/patients/profile', data),
   getAll: () => api.get('/patients/all'),
+  register: (data) => api.post('/patients/register', data),
+  update: (id, data) => api.put(`/patients/${id}`, data),
 };
 
 // Appointments
@@ -118,6 +120,7 @@ export const agentAPI = {
 export const reportAPI = {
   getAll: () => api.get('/reports'),
   create: (data) => api.post('/reports', data),
+  update: (id, data) => api.put(`/reports/${id}`, data),
 };
 
 // Notifications
