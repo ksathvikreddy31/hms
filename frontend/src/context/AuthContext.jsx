@@ -25,9 +25,15 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, selectedRole) => {
     const res = await authAPI.login({ email, password });
     const { token, user: userData } = res.data;
+    
+    // Override the user's role with the role they selected on the login screen
+    if (selectedRole && userData) {
+      userData.role = selectedRole;
+    }
+    
     localStorage.setItem('mnh_token', token);
     localStorage.setItem('mnh_user', JSON.stringify(userData));
     setUser(userData);
@@ -43,20 +49,6 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const switchRole = async (role) => {
-    const res = await authAPI.switchRole(role);
-    const { token, user: userData } = res.data;
-    
-    // Only update token if the backend provided a new one
-    if (token) {
-      localStorage.setItem('mnh_token', token);
-    }
-    
-    localStorage.setItem('mnh_user', JSON.stringify(userData || res.data.data?.user));
-    setUser(userData || res.data.data?.user);
-    return userData || res.data.data?.user;
-  };
-
   const logout = () => {
     localStorage.removeItem('mnh_token');
     localStorage.removeItem('mnh_user');
@@ -64,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, switchRole, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

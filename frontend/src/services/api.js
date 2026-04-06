@@ -116,6 +116,13 @@ export const reportAPI = {
   create: (data) => api.post('/reports', data),
 };
 
+// Notifications
+export const notificationAPI = {
+  getAll: () => api.get('/notifications/'),
+  markAllRead: () => api.put('/notifications/mark-read'),
+  markOneRead: (id) => api.put(`/notifications/${id}/mark-read`),
+};
+
 export function extractData(response, key) {
   // Safely extract deeply nested data object if present, else fallback
   return response?.data?.data?.[key] || response?.data?.[key] || [];
