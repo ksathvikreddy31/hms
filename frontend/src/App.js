@@ -35,8 +35,6 @@ const AdminRoute = ({ children }) => {
 
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { user } = useAuth();
-  const isPatient = user?.role === 'patient';
 
   return (
     <div className="min-h-screen bg-gray-50">

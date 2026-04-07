@@ -1,4 +1,3 @@
-import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const StatsCard = ({ icon: Icon, label, value, trend, trendValue, color = 'primary', delay = 0 }) => {
@@ -10,16 +9,6 @@ const StatsCard = ({ icon: Icon, label, value, trend, trendValue, color = 'prima
     rose: 'from-hospital-rose to-rose-600',
     amber: 'from-hospital-amber to-amber-600',
     sky: 'from-hospital-sky to-sky-600',
-  };
-
-  const bgColorMap = {
-    primary: 'bg-primary-50',
-    blue: 'bg-blue-50',
-    purple: 'bg-purple-50',
-    teal: 'bg-teal-50',
-    rose: 'bg-rose-50',
-    amber: 'bg-amber-50',
-    sky: 'bg-sky-50',
   };
 
   return (

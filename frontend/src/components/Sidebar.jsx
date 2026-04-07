@@ -1,8 +1,7 @@
-import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  LayoutDashboard, Users, CalendarDays, Building2, Package,
+  LayoutDashboard, Users, CalendarDays, Building2,
   Receipt, CreditCard, TrendingUp, Brain, Bot, Pill,
   LogOut, ChevronLeft, ChevronRight, Heart, Shield, FileText
 } from 'lucide-react';
