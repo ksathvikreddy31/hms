@@ -43,7 +43,7 @@ const PatientDashboard = () => {
         
         setDepartments(extractData(deptRes, 'departments') || []);
         const allStaff = extractData(docRes, 'staff') || [];
-        setDoctors(allStaff.filter(s => s.role === 'doctor'));
+        setDoctors(allStaff.filter(s => s.role === 'doctor' && s.status === 'active'));
         
         let allAppts = extractData(apptRes, 'appointments') || [];
         setAppointments(allAppts.filter(a => a.status === 'scheduled'));

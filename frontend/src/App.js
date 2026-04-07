@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -78,6 +80,7 @@ function App() {
         </Routes>
         <UfoChatWidget />
       </Router>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
     </AuthProvider>
   );
 }
