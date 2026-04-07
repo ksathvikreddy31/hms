@@ -65,6 +65,8 @@ const AppLayout = () => {
   );
 };
 
+import UfoChatWidget from './components/UfoChatWidget';
+
 function App() {
   return (
     <AuthProvider>
@@ -74,6 +76,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
         </Routes>
+        <UfoChatWidget />
       </Router>
     </AuthProvider>
   );
