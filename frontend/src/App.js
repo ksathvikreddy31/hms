@@ -37,8 +37,6 @@ const AdminRoute = ({ children }) => {
 
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { user } = useAuth();
-  const isPatient = user?.role === 'patient';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,6 +67,8 @@ const AppLayout = () => {
   );
 };
 
+import UfoChatWidget from './components/UfoChatWidget';
+
 function App() {
   return (
     <AuthProvider>
@@ -78,6 +78,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
         </Routes>
+        <UfoChatWidget />
       </Router>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
     </AuthProvider>

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { patientAPI, extractData } from '../services/api';
+import { patientAPI } from '../services/api';
 import TopBar from '../components/TopBar';
 import {
   User, Mail, Droplets, Calendar, Users2, Save,
@@ -25,7 +24,6 @@ const calculateAge = (dob) => {
 
 const MyProfile = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,11 +39,7 @@ const MyProfile = () => {
     dob: '',
   });
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const res = await patientAPI.getProfile();
       const data = res.data?.data?.patient || res.data?.patient || null;
@@ -77,7 +71,11 @@ const MyProfile = () => {
       });
     }
     setLoading(false);
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleSave = async () => {
     setSaving(true);

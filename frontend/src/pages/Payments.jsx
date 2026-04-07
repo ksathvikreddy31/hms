@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { billingAPI, paymentAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { CreditCard, Smartphone, Banknote, CheckCircle, Clock, X, ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
+import { CreditCard, Smartphone, Banknote, CheckCircle, Clock, ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
 
 const Payments = () => {
   const { user } = useAuth();
@@ -22,9 +22,7 @@ const Payments = () => {
   const [cardName, setCardName] = useState('');
   const [step, setStep] = useState('list'); // 'list' | 'details' | 'confirm' | 'success'
 
-  useEffect(() => { fetchPending(); }, []);
-
-  const fetchPending = async () => {
+  const fetchPending = useCallback(async () => {
     try {
       const res = isAdmin ? await billingAPI.getAll() : await billingAPI.getMine();
       setPendingBills((extractData(res, 'billings') || []).filter(b => b.status === 'pending'));
@@ -33,7 +31,9 @@ const Payments = () => {
       setPendingBills([]);
     }
     setLoading(false);
-  };
+  }, [isAdmin]);
+
+  useEffect(() => { fetchPending(); }, [fetchPending]);
 
   const selectBill = (bill) => {
     setSelectedBill(bill);

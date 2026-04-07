@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { reportAPI, patientAPI, extractData } from '../services/api';
 import { FileText, Calendar, Plus, UserRound, Search, X, Pencil } from 'lucide-react';
@@ -18,14 +18,7 @@ const Reports = () => {
   const [editReportId, setEditReportId] = useState(null);
   const [formData, setFormData] = useState({ patient_id: '', doctor_name: '', diagnosis: '', suggestions: '' });
 
-  useEffect(() => {
-    fetchReports();
-    if (isAdmin) {
-      fetchPatients();
-    }
-  }, []);
-
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       const res = await reportAPI.getAll();
       setReports(extractData(res, 'reports') || []);
@@ -33,16 +26,23 @@ const Reports = () => {
       console.error(err);
     }
     setLoading(false);
-  };
+  }, []);
 
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
       const res = await patientAPI.getAll();
       setPatients(extractData(res, 'patients') || []);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+    if (isAdmin) {
+      fetchPatients();
+    }
+  }, [isAdmin, fetchReports, fetchPatients]);
 
   const handleSaveReport = async (e) => {
     e.preventDefault();

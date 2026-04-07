@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { appointmentAPI, hospitalAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +7,6 @@ import { toast } from 'react-toastify';
 
 const Appointments = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,52 +27,7 @@ const Appointments = () => {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'doctor';
 
-  useEffect(() => {
-    fetchAppointments();
-    if (!isAdmin) {
-      fetchDepartments();
-    }
-  }, []);
-
-  // Handle query params: auto-select department and optionally doctor
-  useEffect(() => {
-    const deptParam = searchParams.get('department');
-    const doctorParam = searchParams.get('doctor');
-
-    if (deptParam && !isAdmin) {
-      const dept = decodeURIComponent(deptParam);
-      setSelectedDept(dept);
-      setPreselectedFromDept(true);
-
-      // Fetch doctors for this department, then optionally pre-select doctor
-      const initFromDept = async () => {
-        try {
-          const res = await hospitalAPI.getDoctors(dept);
-          const docList = extractData(res, 'doctors') || [];
-          setDoctors(docList);
-
-          if (doctorParam) {
-            const docId = parseInt(doctorParam);
-            const matchedDoc = docList.find(d => d.id === docId);
-            if (matchedDoc) {
-              setSelectedDoctor(matchedDoc);
-              setStep(3); // Skip to date selection
-            } else {
-              setStep(2); // Doctor not found, let user pick
-            }
-          } else {
-            setStep(2); // No doctor specified, let user pick
-          }
-        } catch (err) {
-          console.error(err);
-          setStep(1); // Fallback to department selection
-        }
-      };
-      initFromDept();
-    }
-  }, [searchParams, isAdmin]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const res = isAdmin ? await appointmentAPI.getAll() : await appointmentAPI.getMine();
       setAppointments(extractData(res, 'appointments') || []);
@@ -83,9 +36,9 @@ const Appointments = () => {
       setAppointments([]);
     }
     setLoading(false);
-  };
+  }, [isAdmin]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await hospitalAPI.getDepartments();
       setDepartments(extractData(res, 'departments') || []);
@@ -93,7 +46,14 @@ const Appointments = () => {
       console.error(err);
       setDepartments([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+    if (!isAdmin) {
+      fetchDepartments();
+    }
+  }, [fetchAppointments, fetchDepartments, isAdmin]);
 
   const fetchDoctors = async (dept) => {
     try {

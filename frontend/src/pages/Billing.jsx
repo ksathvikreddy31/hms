@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import TopBar from '../components/TopBar';
 import { billingAPI, paymentAPI, patientAPI, extractData } from '../services/api';
-import { Receipt, IndianRupee, CreditCard, CheckCircle, Clock, Plus, X, Users } from 'lucide-react';
+import { Receipt, IndianRupee, CreditCard, CheckCircle, Clock, Plus, X } from 'lucide-react';
 
 const Billing = () => {
   const [bills, setBills] = useState([]);

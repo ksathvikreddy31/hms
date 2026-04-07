@@ -114,6 +114,7 @@ export const agentAPI = {
   trigger: (scenario) => api.post('/agents/trigger', { scenario }),
   getActivity: (limit = 20) => api.get(`/agents/activity?limit=${limit}`),
   getProfiles: () => api.get('/agents/profiles'),
+  chat: (query, frontendState = null) => api.post('/agents/chat', { query, frontend_state: frontendState }),
 };
 
 // Reports
