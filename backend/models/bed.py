@@ -3,6 +3,7 @@ from extensions import db
 
 class Bed(db.Model):
     __tablename__ = 'beds'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     ward = db.Column(db.String(80))
     bed_number = db.Column(db.String(10), unique=True)

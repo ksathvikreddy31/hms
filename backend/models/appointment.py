@@ -3,6 +3,7 @@ from extensions import db
 
 class Appointment(db.Model):
     __tablename__ = 'appointments'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
     doctor_name = db.Column(db.String(120))

@@ -31,15 +31,36 @@ const UfoChatWidget = () => {
       const response = await agentAPI.chat(userMsg, uiState);
       const data = response.data;
       
-      // Add standard text response
-      setMessages(prev => [...prev, { text: data.message || "Action processed.", sender: 'ai' }]);
+      // Add response based on backend format
+      let message = "Action processed.";
+      if (data.details) {
+        message = data.details;
+      } else if (data.message) {
+        message = data.message;
+      }
+      
+      // Add status information
+      if (data.status === 'failure') {
+        message += " (Failed)";
+      } else if (data.status === 'success') {
+        message += " (Success)";
+      }
+      
+      setMessages(prev => [...prev, { text: message, sender: 'ai' }]);
 
-      // Process UFO Level 2/3 Actions
+      // Process next steps if available
+      if (data.next_steps) {
+        setTimeout(() => {
+          setMessages(prev => [...prev, { text: `Next steps: ${data.next_steps}`, sender: 'ai' }]);
+        }, 500);
+      }
+
+      // Process UFO actions if available (for future compatibility)
       if (data.actions && data.actions.length > 0) {
         data.actions.forEach((action, i) => {
           setTimeout(() => {
             executeAction(action);
-          }, i * 500); // Sequence animations slightly
+          }, (i + 1) * 500);
         });
       }
     } catch (err) {

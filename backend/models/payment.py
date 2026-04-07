@@ -4,6 +4,7 @@ import uuid
 
 class Payment(db.Model):
     __tablename__ = 'payments'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     billing_id = db.Column(db.Integer, db.ForeignKey('billings.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
