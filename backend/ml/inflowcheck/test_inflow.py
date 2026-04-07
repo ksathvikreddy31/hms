@@ -1,32 +1,44 @@
+import os
 import joblib
 import pandas as pd
 
-# Load model
-model = joblib.load("inflow_model.pkl")
+# Load model with proper absolute path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(BASE_DIR, "inflow_model.pkl")
 
-print("✅ Model Loaded Successfully\n")
+# Only load model at module level if file exists to prevent pytest collection errors
+if os.path.exists(model_path):
+    model = joblib.load(model_path)
+else:
+    model = None
 
-# ---------- SINGLE DATE TEST ----------
-date = input("Enter date (YYYY-MM-DD): ")
+if __name__ == "__main__":
+    if model is None:
+        print("❌ Inflow model not found.")
+    else:
+        print("✅ Model Loaded Successfully\n")
 
-date_obj = pd.to_datetime(date)
-day = date_obj.toordinal()
+        # ---------- SINGLE DATE TEST ----------
+        date = input("Enter date (YYYY-MM-DD): ")
 
-prediction = model.predict(pd.DataFrame([[day]], columns=['Day']))
+        date_obj = pd.to_datetime(date)
+        day = date_obj.toordinal()
 
-print(f"\n📅 Date: {date}")
-print(f"👥 Predicted Patients: {int(prediction[0])}")
+        prediction = model.predict(pd.DataFrame([[day]], columns=['Day']))
 
-# ---------- MULTIPLE DAYS TEST ----------
-print("\n🔮 Predict next N days")
-n = int(input("Enter number of days: "))
+        print(f"\n📅 Date: {date}")
+        print(f"👥 Predicted Patients: {int(prediction[0])}")
 
-print("\nPredictions:\n")
+        # ---------- MULTIPLE DAYS TEST ----------
+        print("\n🔮 Predict next N days")
+        n = int(input("Enter number of days: "))
 
-for i in range(n):
-    future_date = date_obj + pd.Timedelta(days=i)
-    day = future_date.toordinal()
+        print("\nPredictions:\n")
 
-    pred = model.predict(pd.DataFrame([[day]], columns=['Day']))
+        for i in range(n):
+            future_date = date_obj + pd.Timedelta(days=i)
+            day = future_date.toordinal()
 
-    print(f"{future_date.date()} → {int(pred[0])} patients")
+            pred = model.predict(pd.DataFrame([[day]], columns=['Day']))
+
+            print(f"{future_date.date()} → {int(pred[0])} patients")
