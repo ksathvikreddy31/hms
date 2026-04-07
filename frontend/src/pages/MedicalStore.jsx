@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/TopBar';
 import { hospitalAPI, extractData } from '../services/api';
-import { Pill, AlertTriangle, Package, TrendingDown, Plus, Minus, Search, X, Pencil } from 'lucide-react';
+import { AlertTriangle, Package, TrendingDown, Plus, Search, X, Pencil } from 'lucide-react';
 
 const MedicalStore = () => {
   const [medicines, setMedicines] = useState([]);
@@ -75,22 +75,6 @@ const MedicalStore = () => {
     } catch (err) { console.error(err); }
   };
 
-  const handleBulkImport = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      await hospitalAPI.bulkAddMedicines(formData);
-      fetchData();
-      alert('Medicines imported successfully!');
-    } catch (err) { 
-      console.error(err); 
-      alert('Error importing medicines. Please check the CSV format.');
-    }
-  };
 
   const filteredMedicines = medicines.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()));
   const lowStock = medicines.filter(m => m.is_low_stock);

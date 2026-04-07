@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { hospitalAPI, extractData } from '../services/api';
 import {
   ArrowLeft, Stethoscope, Clock, MapPin, CalendarDays, ChevronRight,
-  Heart, Brain, Bone, Baby, Activity, Award, Phone, Shield, CheckCircle2
+  Heart, Brain, Bone, Baby, Activity, Award, Shield, CheckCircle2
 } from 'lucide-react';
 
 const DEPT_COLORS = {

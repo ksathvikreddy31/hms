@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { hospitalAPI, extractData } from '../services/api';
 import {
-  ArrowLeft, Stethoscope, Clock, Phone, Award, MapPin,
-  Heart, Brain, Bone, Baby, Pill, Activity, CalendarDays, ChevronRight
+  ArrowLeft, Stethoscope, Clock, Award, MapPin,
+  Heart, Brain, Bone, Baby, Activity, CalendarDays, ChevronRight
 } from 'lucide-react';
 
 // Department metadata with descriptions, images, and icons

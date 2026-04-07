@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/TopBar';
 import { hospitalAPI, extractData } from '../services/api';
-import { Users, BedDouble, Wrench, UserPlus, ChevronDown } from 'lucide-react';
+import { Users, BedDouble, Wrench } from 'lucide-react';
 
 const HospitalOps = () => {
   const [staff, setStaff] = useState([]);
