@@ -18,6 +18,7 @@ import Reports from './pages/Reports';
 import DepartmentDetail from './pages/DepartmentDetail';
 import DoctorProfile from './pages/DoctorProfile';
 import MyProfile from './pages/MyProfile';
+import UfoChatWidget from './components/UfoChatWidget';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -66,8 +67,6 @@ const AppLayout = () => {
     </div>
   );
 };
-
-import UfoChatWidget from './components/UfoChatWidget';
 
 function App() {
   return (
