@@ -3,6 +3,7 @@ from extensions import db
 
 class Equipment(db.Model):
     __tablename__ = 'equipment'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
     category = db.Column(db.String(80))

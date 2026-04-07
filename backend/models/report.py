@@ -2,6 +2,7 @@ from extensions import db
 
 class Report(db.Model):
     __tablename__ = 'reports'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
     doctor_name = db.Column(db.String(120), nullable=False)

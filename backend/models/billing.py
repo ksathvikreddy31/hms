@@ -4,6 +4,7 @@ import json
 
 class Billing(db.Model):
     __tablename__ = 'billings'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
     items = db.Column(db.Text, nullable=False)  # JSON

@@ -3,6 +3,7 @@ from extensions import db
 
 class FinanceRecord(db.Model):
     __tablename__ = 'finance_records'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     record_type = db.Column(db.String(20))  # revenue, expense
     category = db.Column(db.String(60))

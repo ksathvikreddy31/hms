@@ -3,6 +3,7 @@ from extensions import db
 
 class Patient(db.Model):
     __tablename__ = 'patients'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     age = db.Column(db.Integer)

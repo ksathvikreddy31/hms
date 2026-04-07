@@ -2,6 +2,16 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 import random
 from datetime import datetime
+import sys
+import os
+
+# Add agents folder to path so backend can import it
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+try:
+    from agents.orchestrator import handle_query
+except ImportError:
+    handle_query = None
 
 agents_bp = Blueprint('agents', __name__)
 
@@ -55,3 +65,64 @@ def trigger_agents():
 def get_activity():
     limit = request.args.get('limit', 30, type=int)
     return jsonify({'activities': agent_activities[:limit], 'profiles': AGENT_PROFILES})
+
+
+@agents_bp.route('/chat', methods=['POST'])
+@jwt_required(optional=True)
+def ufo_chat():
+    """Endpoint for the UFO AI Assistant (Step 2 Implementation)."""
+    data = request.get_json()
+    query = data.get('query')
+    
+    if not query:
+        return jsonify({"error": "No query provided"}), 400
+        
+    if handle_query:
+        # Extract patient_id from JWT if available, or from frontend_state
+        patient_id = None
+        try:
+            # Try to get from JWT (if user is logged in)
+            from flask_jwt_extended import get_jwt_identity
+            user_id = get_jwt_identity()
+            if user_id:
+                from models.user import User
+                user = User.query.get(int(user_id))
+                if user and user.role == 'patient':
+                    # Get patient record for this user
+                    from models.patient import Patient
+                    patient = Patient.query.filter_by(user_id=user.id).first()
+                    if patient:
+                        patient_id = patient.id
+        except:
+            # JWT not present or invalid, try frontend_state
+            patient_id = data.get('patient_id') or data.get('frontend_state', {}).get('patient_id')
+        
+        # Calls the actual UFO orchestrator
+        frontend_state = data.get('frontend_state', {})
+        user_role = "unknown"
+        try:
+            from models.user import User
+            user = User.query.get(int(user_id)) if user_id else None
+            if user:
+                user_role = user.role or "unknown"
+                if user.role == 'patient':
+                    from models.patient import Patient
+                    patient = Patient.query.filter_by(user_id=user.id).first()
+                    if patient:
+                        patient_id = patient.id
+        except Exception:
+            pass
+
+        if frontend_state.get('user_role'):
+            user_role = frontend_state['user_role']
+
+        context = {
+            "endpoint": "/api/agents/chat",
+            "frontend_state": frontend_state,
+            "patient_id": patient_id,
+            "user_role": user_role,
+        }
+        result = handle_query(query, context=context)
+        return jsonify(result)
+    else:
+        return jsonify({"error": "AI Orchestrator not loaded properly"}), 500
