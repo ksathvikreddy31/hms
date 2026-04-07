@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import TopBar from '../components/TopBar';
 import { hospitalAPI, extractData } from '../services/api';
-import { Users, BedDouble, Wrench } from 'lucide-react';
+import { Users, BedDouble, Wrench, UserPlus } from 'lucide-react';
 
 const HospitalOps = () => {
   const [staff, setStaff] = useState([]);
