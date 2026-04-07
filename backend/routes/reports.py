@@ -44,3 +44,29 @@ def add_report():
         'message': 'Report added successfully',
         'data': {'report': new_report.to_dict()}
     })
+
+@reports_bp.route('/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_report(id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role == 'patient':
+        return jsonify({'message': 'Access forbidden', 'data': None}), 403
+
+    report = Report.query.get_or_404(id)
+    data = request.json
+    
+    if 'doctor_name' in data:
+        report.doctor_name = data['doctor_name']
+    if 'diagnosis' in data:
+        report.diagnosis = data['diagnosis']
+    if 'suggestions' in data:
+        report.suggestions = data['suggestions']
+    if 'patient_id' in data:
+        report.patient_id = data['patient_id']
+        
+    db.session.commit()
+    return jsonify({
+        'message': 'Report updated successfully',
+        'data': {'report': report.to_dict()}
+    })

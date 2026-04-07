@@ -4,6 +4,7 @@ from extensions import db
 from models.appointment import Appointment
 from models.patient import Patient
 from models.user import User
+from models.notification import Notification
 from decorators import role_required
 
 appointments_bp = Blueprint('appointments', __name__)
@@ -20,6 +21,11 @@ def get_slots():
     doctor = Staff.query.get(doctor_id)
     if not doctor:
         return jsonify({'message': 'Doctor not found', 'data': None}), 404
+        
+    if doctor.status == 'inactive':
+        return jsonify({'message': 'Doctor is currently unavailable', 'data': {'slots': []}})
+    if doctor.unavailable_date and str(doctor.unavailable_date) == date_str:
+        return jsonify({'message': 'Doctor is unavailable on this date', 'data': {'slots': []}})
         
     all_slots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM']
     
@@ -91,6 +97,27 @@ def create_appointment():
         notes=data.get('notes', '')
     )
     db.session.add(appt)
+    
+    # Generate notification
+    if user.role == 'patient':
+        notif = Notification(
+            user_id=user.id,
+            type='success',
+            title='Appointment Confirmed',
+            message=f"Your appointment with {data.get('doctor_name')} on {date_str} at {data.get('time_slot', '10:00 AM')} is confirmed."
+        )
+        db.session.add(notif)
+    elif patient_id:
+        p = Patient.query.get(patient_id)
+        if p and p.user_id:
+            notif = Notification(
+                user_id=p.user_id,
+                type='success',
+                title='Appointment Scheduled',
+                message=f"An appointment was scheduled with {data.get('doctor_name')} on {date_str} at {data.get('time_slot', '10:00 AM')}."
+            )
+            db.session.add(notif)
+
     db.session.commit()
     return jsonify({'message': 'Appointment booked', 'data': {'appointment': appt.to_dict()}}), 201
 
@@ -106,6 +133,24 @@ def cancel_appointment(aid):
         if not patient or appt.patient_id != patient.id:
             return jsonify({'message': 'Access forbidden', 'data': None}), 403
             
+        notif = Notification(
+            user_id=user.id,
+            type='warning',
+            title='Appointment Cancelled',
+            message=f"Your appointment with {appt.doctor_name} has been cancelled."
+        )
+        db.session.add(notif)
+    else:
+        p = Patient.query.get(appt.patient_id)
+        if p and p.user_id:
+            notif = Notification(
+                user_id=p.user_id,
+                type='warning',
+                title='Appointment Cancelled',
+                message=f"Your appointment with {appt.doctor_name} was cancelled by the hospital."
+            )
+            db.session.add(notif)
+
     appt.status = 'cancelled'
     db.session.commit()
     return jsonify({'message': 'Appointment cancelled', 'data': {'appointment': appt.to_dict()}})
