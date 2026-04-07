@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from './components/Sidebar';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,6 +17,10 @@ import Predictions from './pages/Predictions';
 import AgentActivity from './pages/AgentActivity';
 import PatientsList from './pages/PatientsList';
 import Reports from './pages/Reports';
+import DepartmentDetail from './pages/DepartmentDetail';
+import DoctorProfile from './pages/DoctorProfile';
+import MyProfile from './pages/MyProfile';
+import UfoChatWidget from './components/UfoChatWidget';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -23,8 +29,16 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Guard for admin-only routes — redirects patients back to dashboard
+const AdminRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user?.role === 'patient') return <Navigate to="/dashboard" />;
+  return children;
+};
+
 const AppLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
@@ -32,15 +46,21 @@ const AppLayout = () => {
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/hospital-ops" element={<HospitalOps />} />
-          <Route path="/medical-store" element={<MedicalStore />} />
-          <Route path="/patients" element={<PatientsList />} />
-          <Route path="/billing" element={<Billing />} />
           <Route path="/payments" element={<Payments />} />
-          <Route path="/finance" element={<Finance />} />
-          <Route path="/predictions" element={<Predictions />} />
-          <Route path="/agents" element={<AgentActivity />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/department/:name" element={<DepartmentDetail />} />
+          <Route path="/doctor/:id" element={<DoctorProfile />} />
+          <Route path="/my-profile" element={<MyProfile />} />
+          
+          {/* Admin-only routes */}
+          <Route path="/hospital-ops" element={<AdminRoute><HospitalOps /></AdminRoute>} />
+          <Route path="/medical-store" element={<AdminRoute><MedicalStore /></AdminRoute>} />
+          <Route path="/patients" element={<AdminRoute><PatientsList /></AdminRoute>} />
+          <Route path="/billing" element={<AdminRoute><Billing /></AdminRoute>} />
+          <Route path="/finance" element={<AdminRoute><Finance /></AdminRoute>} />
+          <Route path="/predictions" element={<AdminRoute><Predictions /></AdminRoute>} />
+          <Route path="/agents" element={<AdminRoute><AgentActivity /></AdminRoute>} />
+          
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </main>
@@ -57,7 +77,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/*" element={<ProtectedRoute><AppLayout /></ProtectedRoute>} />
         </Routes>
+        <UfoChatWidget />
       </Router>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
     </AuthProvider>
   );
 }

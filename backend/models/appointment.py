@@ -19,8 +19,13 @@ class Appointment(db.Model):
         date_str = None
         if self.date:
             date_str = self.date.isoformat() if hasattr(self.date, 'isoformat') else str(self.date)
-            
+
+        patient_name = None
+        if self.patient and self.patient.user:
+            patient_name = self.patient.user.name
+
         return {'id': self.id, 'patient_id': self.patient_id,
+                'patient_name': patient_name,
                 'doctor_name': self.doctor_name, 'department': self.department,
                 'date': date_str,
                 'time_slot': self.time_slot, 'status': self.status,

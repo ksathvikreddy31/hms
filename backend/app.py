@@ -4,9 +4,9 @@ from config import Config
 from extensions import db, jwt
 
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
 
     # Extensions
     CORS(app, supports_credentials=True)
@@ -28,6 +28,7 @@ def create_app():
     from routes.agents import agents_bp
     from routes.dashboard import dashboard_bp
     from routes.reports import reports_bp
+    from routes.notifications import notifications_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(patients_bp, url_prefix='/api/patients')
@@ -40,10 +41,11 @@ def create_app():
     app.register_blueprint(agents_bp, url_prefix='/api/agents')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
+    app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 
     # Create tables
     with app.app_context():
-        from models import user, patient, appointment, staff, bed, equipment, medicine, billing, payment, finance, report
+        from models import user, patient, appointment, staff, bed, equipment, medicine, billing, payment, finance, report, notification
         db.create_all()
 
     return app
