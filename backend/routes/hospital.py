@@ -87,13 +87,84 @@ def get_equipment():
     return jsonify({'message': 'Equipment fetched successfully', 'data': {'equipment': [e.to_dict() for e in equip]}})
 
 
+@hospital_bp.route('/staff', methods=['POST'])
+@jwt_required()
+def create_staff():
+    data = request.json
+    try:
+        new_staff = Staff(
+            name=data.get('name'),
+            role=data.get('role', 'doctor'),
+            department=data.get('department'),
+            specialization=data.get('specialization'),
+            shift=data.get('shift', 'Morning'),
+            phone=data.get('phone')
+        )
+        db.session.add(new_staff)
+        db.session.commit()
+        return jsonify({'message': 'Staff added successfully', 'data': {'staff': new_staff.to_dict()}}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': str(e), 'data': None}), 400
+
 @hospital_bp.route('/staff/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_staff(id):
     data = request.json
     staff = Staff.query.get_or_404(id)
+    
+    cancel_condition = None
+
+    if 'name' in data: staff.name = data['name']
+    if 'role' in data: staff.role = data['role']
+    if 'department' in data: staff.department = data['department']
+    if 'specialization' in data: staff.specialization = data['specialization']
+    if 'shift' in data: staff.shift = data['shift']
+    if 'phone' in data: staff.phone = data['phone']
+
     if 'status' in data:
         staff.status = data['status']
+        if staff.status == 'inactive':
+            cancel_condition = 'all'
+
+    if 'unavailable_date' in data:
+        if data['unavailable_date']:
+            try:
+                from datetime import datetime
+                staff.unavailable_date = datetime.strptime(data['unavailable_date'], '%Y-%m-%d').date()
+                cancel_condition = 'date'
+            except ValueError:
+                return jsonify({'message': 'Invalid date format, use YYYY-MM-DD', 'data': None}), 400
+        else:
+            staff.unavailable_date = None
+
+    if cancel_condition:
+        from models.appointment import Appointment
+        from models.notification import Notification
+        from models.patient import Patient
+        from sqlalchemy import func
+        
+        query = Appointment.query.filter(
+            Appointment.status == 'scheduled',
+            Appointment.doctor_name.contains(staff.name)
+        )
+        if cancel_condition == 'date' and staff.unavailable_date:
+            query = query.filter(func.date(Appointment.date) == str(staff.unavailable_date))
+        
+        appts = query.all()
+        for appt in appts:
+            appt.status = 'cancelled'
+            p = Patient.query.get(appt.patient_id)
+            if p and p.user_id:
+                date_str = str(appt.date)[:10] if appt.date else 'a recent date'
+                notif = Notification(
+                    user_id=p.user_id,
+                    type='warning',
+                    title='Appointment Cancelled',
+                    message=f"Your appointment with Dr. {staff.name} on {date_str} has been cancelled due to doctor unavailability."
+                )
+                db.session.add(notif)
+
     db.session.commit()
     return jsonify({'message': 'Staff updated successfully', 'data': {'staff': staff.to_dict()}})
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TopBar from '../components/TopBar';
 import { predictionAPI } from '../services/api';
-import { Brain, Users, IndianRupee, Activity, Package, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Users, IndianRupee, Activity, Package, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Predictions = () => {

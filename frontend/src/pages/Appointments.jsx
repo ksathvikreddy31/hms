@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { appointmentAPI, hospitalAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Clock, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const Appointments = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +16,7 @@ const Appointments = () => {
   const [departments, setDepartments] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [slots, setSlots] = useState([]);
+  const [slotMessage, setSlotMessage] = useState('');
   
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -27,52 +27,7 @@ const Appointments = () => {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'doctor';
 
-  useEffect(() => {
-    fetchAppointments();
-    if (!isAdmin) {
-      fetchDepartments();
-    }
-  }, []);
-
-  // Handle query params: auto-select department and optionally doctor
-  useEffect(() => {
-    const deptParam = searchParams.get('department');
-    const doctorParam = searchParams.get('doctor');
-
-    if (deptParam && !isAdmin) {
-      const dept = decodeURIComponent(deptParam);
-      setSelectedDept(dept);
-      setPreselectedFromDept(true);
-
-      // Fetch doctors for this department, then optionally pre-select doctor
-      const initFromDept = async () => {
-        try {
-          const res = await hospitalAPI.getDoctors(dept);
-          const docList = extractData(res, 'doctors') || [];
-          setDoctors(docList);
-
-          if (doctorParam) {
-            const docId = parseInt(doctorParam);
-            const matchedDoc = docList.find(d => d.id === docId);
-            if (matchedDoc) {
-              setSelectedDoctor(matchedDoc);
-              setStep(3); // Skip to date selection
-            } else {
-              setStep(2); // Doctor not found, let user pick
-            }
-          } else {
-            setStep(2); // No doctor specified, let user pick
-          }
-        } catch (err) {
-          console.error(err);
-          setStep(1); // Fallback to department selection
-        }
-      };
-      initFromDept();
-    }
-  }, [searchParams, isAdmin]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const res = isAdmin ? await appointmentAPI.getAll() : await appointmentAPI.getMine();
       setAppointments(extractData(res, 'appointments') || []);
@@ -81,9 +36,9 @@ const Appointments = () => {
       setAppointments([]);
     }
     setLoading(false);
-  };
+  }, [isAdmin]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const res = await hospitalAPI.getDepartments();
       setDepartments(extractData(res, 'departments') || []);
@@ -91,7 +46,14 @@ const Appointments = () => {
       console.error(err);
       setDepartments([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+    if (!isAdmin) {
+      fetchDepartments();
+    }
+  }, [fetchAppointments, fetchDepartments, isAdmin]);
 
   const fetchDoctors = async (dept) => {
     try {
@@ -107,9 +69,11 @@ const Appointments = () => {
     try {
       const res = await appointmentAPI.getSlots(docId, date);
       setSlots(extractData(res, 'slots') || []);
+      setSlotMessage(res.data?.message || '');
     } catch (err) {
       console.error(err);
       setSlots([]);
+      setSlotMessage('Error fetching slots. Please try again.');
     }
   };
 
@@ -149,13 +113,13 @@ const Appointments = () => {
         notes: notes || "General checkup"
       };
       
-      const res = await appointmentAPI.create(payload);
-      alert("Appointment booked successfully");
+      await appointmentAPI.create(payload);
+      toast.success("Appointment booked successfully");
       setStep(6);
       fetchAppointments();
     } catch (err) {
       console.error(err.response?.data || err.message);
-      alert(err.response?.data?.error || err.response?.data?.message || "Failed to book appointment");
+      toast.error(err.response?.data?.error || err.response?.data?.message || "Failed to book appointment");
     }
   };
 
@@ -169,15 +133,28 @@ const Appointments = () => {
     setPreselectedFromDept(false);
   };
 
-  const handleCancel = async (id) => {
-    if (window.confirm("Are you sure you want to cancel this appointment?")) {
+  const handleCancel = (id) => {
+    const confirmCancel = async () => {
       try {
         await appointmentAPI.cancel(id);
+        toast.dismiss();
+        toast.success("Appointment cancelled");
         fetchAppointments();
       } catch (err) {
-        alert("Action failed");
+        toast.error("Action failed");
       }
-    }
+    };
+
+    toast(
+      <div>
+        <p className="mb-3 text-sm font-medium text-gray-800">Cancel this appointment?</p>
+        <div className="flex gap-2">
+          <button className="bg-rose-500 text-white px-3 py-1 rounded text-xs hover:bg-rose-600 transition-colors cursor-pointer" onClick={confirmCancel}>Yes, Cancel</button>
+          <button className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-xs hover:bg-gray-300 transition-colors cursor-pointer" onClick={() => toast.dismiss()}>No</button>
+        </div>
+      </div>, 
+      { autoClose: false, closeOnClick: false, closeButton: false }
+    );
   };
 
   // Build stepper labels — when coming from department page, show department as pre-filled
@@ -255,14 +232,17 @@ const Appointments = () => {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {doctors.length === 0 ? <p className="text-gray-500 col-span-3">No doctors available in {selectedDept}.</p> : doctors.map(doc => (
-                    <button key={doc.id} onClick={() => handleDoctorSelect(doc)} className="p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex items-center gap-4 text-left cursor-pointer">
-                      <div className="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-lg font-bold">
-                        {doc.name.charAt(0)}
+                    <button key={doc.id} onClick={() => doc.status !== 'inactive' && handleDoctorSelect(doc)} className={`p-4 rounded-xl border border-gray-200 transition-all flex items-center justify-between text-left ${doc.status === 'inactive' ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:border-primary-500 hover:bg-primary-50 cursor-pointer'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-lg font-bold">
+                          {doc.name.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Dr. {doc.name}</h4>
+                          <p className="text-xs text-gray-500">{doc.specialization}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">Dr. {doc.name}</h4>
-                        <p className="text-xs text-gray-500">{doc.specialization}</p>
-                      </div>
+                      {doc.status === 'inactive' && <span className="text-xs text-rose-500 font-semibold bg-rose-50 px-2 py-1 rounded">Unavailable</span>}
                     </button>
                   ))}
                 </div>
@@ -282,7 +262,9 @@ const Appointments = () => {
                 <button onClick={() => setStep(3)} className="text-sm text-primary-600 font-medium mb-4 cursor-pointer">&larr; Back to Date</button>
                 <div className="mb-4 text-gray-700 font-medium">Available Slots on {selectedDate}:</div>
                 {slots.length === 0 ? (
-                   <p className="text-gray-500">No slots available for this date. Please choose another date.</p>
+                   <div className="text-rose-500 bg-rose-50 p-4 rounded-xl font-medium">
+                     {slotMessage.includes('unavailable') ? slotMessage : 'No slots available for this date. Please choose another date.'}
+                   </div>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                     {slots.map(slot => (

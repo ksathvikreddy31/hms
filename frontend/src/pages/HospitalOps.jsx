@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import TopBar from '../components/TopBar';
 import { hospitalAPI, extractData } from '../services/api';
-import { Users, BedDouble, Wrench, UserPlus, ChevronDown } from 'lucide-react';
+import { Users, BedDouble, Wrench, UserPlus } from 'lucide-react';
 
 const HospitalOps = () => {
   const [staff, setStaff] = useState([]);
@@ -9,6 +10,10 @@ const HospitalOps = () => {
   const [equipment, setEquipment] = useState([]);
   const [activeTab, setActiveTab] = useState('staff');
   const [loading, setLoading] = useState(true);
+
+  const [showStaffForm, setShowStaffForm] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
+  const [staffForm, setStaffForm] = useState({ name: '', role: 'doctor', department: '', specialization: '', shift: 'Morning', phone: '' });
 
   const fetchData = async () => {
     try {
@@ -36,6 +41,30 @@ const HospitalOps = () => {
     try {
       await hospitalAPI.updateStaff(id, { status: newStatus });
       setStaff(staff.map(s => s.id === id ? { ...s, status: newStatus } : s));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleStaffFormSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingStaff) {
+        await hospitalAPI.updateStaff(editingStaff.id, staffForm);
+        toast.success("Staff updated successfully");
+      } else {
+        await hospitalAPI.addStaff(staffForm);
+        toast.success("Staff added successfully");
+      }
+      setShowStaffForm(false);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save staff");
+    }
+  };
+
+  const updateStaffDate = async (id, date) => {
+    try {
+      await hospitalAPI.updateStaff(id, { unavailable_date: date });
+      setStaff(staff.map(s => s.id === id ? { ...s, unavailable_date: date } : s));
     } catch (err) { console.error(err); }
   };
 
@@ -76,16 +105,26 @@ const HospitalOps = () => {
       <TopBar title="Hospital Operations" subtitle="Staff, beds, and equipment management" />
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
-        {tabs.map((tab) => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all ${
-              activeTab === tab.id ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-            <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20' : 'bg-gray-100'}`}>{tab.count}</span>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-2">
+          {tabs.map((tab) => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === tab.id ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}>
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20' : 'bg-gray-100'}`}>{tab.count}</span>
+            </button>
+          ))}
+        </div>
+        {activeTab === 'staff' && (
+          <button 
+            onClick={() => { setEditingStaff(null); setStaffForm({ name: '', role: 'doctor', department: '', specialization: '', shift: 'Morning', phone: '' }); setShowStaffForm(true); }} 
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" /> Add Staff
           </button>
-        ))}
+        )}
       </div>
 
       {loading ? (
@@ -106,6 +145,7 @@ const HospitalOps = () => {
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Shift</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Unav. Date</th>
                       <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
@@ -128,6 +168,22 @@ const HospitalOps = () => {
                         <td className="px-6 py-4 text-sm text-gray-600 capitalize">{s.shift}</td>
                         <td className="px-6 py-4"><span className={statusBadge(s.status)}>{s.status}</span></td>
                         <td className="px-6 py-4">
+                          {s.role === 'doctor' ? (
+                            <input 
+                                type="date" 
+                                className="text-sm border border-gray-200 rounded p-1 outline-none text-gray-600 bg-gray-50 w-32" 
+                                value={s.unavailable_date || ''} 
+                                onChange={(e) => updateStaffDate(s.id, e.target.value)} 
+                            />
+                          ) : <span className="text-gray-400 text-xs">-</span>}
+                        </td>
+                        <td className="px-6 py-4 flex gap-3 items-center">
+                          <button 
+                            onClick={() => { setEditingStaff(s); setStaffForm({ name: s.name, role: s.role, department: s.department, specialization: s.specialization || '', shift: s.shift || '', phone: s.phone || '' }); setShowStaffForm(true); }}
+                            className="text-primary-600 hover:text-primary-800 text-sm font-semibold transition-colors cursor-pointer"
+                          >
+                            Edit
+                          </button>
                           <button 
                             onClick={() => toggleStaffStatus(s.id, s.status)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
@@ -221,6 +277,56 @@ const HospitalOps = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Staff Form Modal */}
+      {showStaffForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-xl animate-fade-in">
+            <h2 className="text-xl font-bold text-gray-900 mb-6">{editingStaff ? 'Edit Staff' : 'Add New Staff'}</h2>
+            <form onSubmit={handleStaffFormSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input required type="text" value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <select value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none">
+                    <option value="doctor">Doctor</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="technician">Technician</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Shift</label>
+                  <select value={staffForm.shift} onChange={e => setStaffForm({...staffForm, shift: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none">
+                    <option value="Morning">Morning</option>
+                    <option value="Evening">Evening</option>
+                    <option value="Night">Night</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <input type="text" value={staffForm.department} onChange={e => setStaffForm({...staffForm, department: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                <input type="text" value={staffForm.specialization} onChange={e => setStaffForm({...staffForm, specialization: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" placeholder="e.g. Cardiologist" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <input type="tel" value={staffForm.phone} onChange={e => setStaffForm({...staffForm, phone: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setShowStaffForm(false)} className="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 cursor-pointer">Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 shadow-sm cursor-pointer">{editingStaff ? 'Save Changes' : 'Add Staff'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

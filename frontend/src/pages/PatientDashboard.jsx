@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { hospitalAPI, appointmentAPI, billingAPI, paymentAPI, extractData } from '../services/api';
+import { hospitalAPI, appointmentAPI, billingAPI, extractData } from '../services/api';
 import TopBar from '../components/TopBar';
 import { Calendar, CreditCard, Activity, ChevronRight, UserRound, Stethoscope, ArrowRight, Lightbulb } from 'lucide-react';
 
@@ -43,7 +43,7 @@ const PatientDashboard = () => {
         
         setDepartments(extractData(deptRes, 'departments') || []);
         const allStaff = extractData(docRes, 'staff') || [];
-        setDoctors(allStaff.filter(s => s.role === 'doctor'));
+        setDoctors(allStaff.filter(s => s.role === 'doctor' && s.status === 'active'));
         
         let allAppts = extractData(apptRes, 'appointments') || [];
         setAppointments(allAppts.filter(a => a.status === 'scheduled'));
