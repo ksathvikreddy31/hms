@@ -20,6 +20,7 @@ import Reports from './pages/Reports';
 import DepartmentDetail from './pages/DepartmentDetail';
 import DoctorProfile from './pages/DoctorProfile';
 import MyProfile from './pages/MyProfile';
+import DiseasePrediction from './pages/DiseasePrediction';
 import UfoChatWidget from './components/UfoChatWidget';
 
 const ProtectedRoute = ({ children }) => {
@@ -51,6 +52,7 @@ const AppLayout = () => {
           <Route path="/department/:name" element={<DepartmentDetail />} />
           <Route path="/doctor/:id" element={<DoctorProfile />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/predict-disease" element={<DiseasePrediction />} />
           
           {/* Admin-only routes */}
           <Route path="/hospital-ops" element={<AdminRoute><HospitalOps /></AdminRoute>} />
