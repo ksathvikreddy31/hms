@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { appointmentAPI, hospitalAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +6,6 @@ import { Calendar, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lucide-re
 
 const Appointments = () => {
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
