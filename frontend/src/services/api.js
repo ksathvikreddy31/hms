@@ -107,6 +107,8 @@ export const predictionAPI = {
   getRevenue: () => api.get('/predictions/revenue'),
   getDiseaseTrends: () => api.get('/predictions/disease-trends'),
   getResourceDemand: () => api.get('/predictions/resource-demand'),
+  predictDisease: (symptoms) => api.post('/predictions/predict-disease', { symptoms }),
+  predictInflow: (date) => api.post('/predictions/predict-inflow', { date }),
 };
 
 // Agents

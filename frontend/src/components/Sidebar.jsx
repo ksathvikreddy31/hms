@@ -20,6 +20,7 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     { to: '/appointments', icon: CalendarDays, label: 'Appointments' },
     { to: '/payments', icon: CreditCard, label: 'Payments' },
     { to: '/reports', icon: Building2, label: 'My Reports' },
+    { to: '/predict-disease', icon: Brain, label: 'Disease Prediction' },
   ];
 
   const adminLinks = [
