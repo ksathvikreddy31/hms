@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { appointmentAPI, hospitalAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Calendar, Clock, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const Appointments = () => {
@@ -113,7 +113,7 @@ const Appointments = () => {
         notes: notes || "General checkup"
       };
       
-      const res = await appointmentAPI.create(payload);
+      await appointmentAPI.create(payload);
       toast.success("Appointment booked successfully");
       setStep(6);
       fetchAppointments();
