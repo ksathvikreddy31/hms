@@ -44,6 +44,8 @@ export const patientAPI = {
   getProfile: () => api.get('/patients/profile'),
   updateProfile: (data) => api.put('/patients/profile', data),
   getAll: () => api.get('/patients/all'),
+  register: (data) => api.post('/patients/register', data),
+  update: (id, data) => api.put(`/patients/${id}`, data),
 };
 
 // Appointments
@@ -62,11 +64,17 @@ export const hospitalAPI = {
   getDepartments: () => api.get('/hospital/departments'),
   getDoctors: (department) => api.get(`/hospital/doctors?department=${department}`),
   addStaff: (data) => api.post('/hospital/staff', data),
+  updateStaff: (id, data) => api.put(`/hospital/staff/${id}`, data),
   getBeds: () => api.get('/hospital/beds'),
   updateBed: (id, data) => api.put(`/hospital/beds/${id}`, data),
   getEquipment: () => api.get('/hospital/equipment'),
+  updateEquipment: (id, data) => api.put(`/hospital/equipment/${id}`, data),
   getMedicines: () => api.get('/hospital/medicines'),
   addMedicine: (data) => api.post('/hospital/medicines', data),
+  bulkAddMedicines: (formData) => api.post('/hospital/medicines/bulk', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  updateMedicine: (id, data) => api.put(`/hospital/medicines/${id}`, data),
   getExpiringMedicines: () => api.get('/hospital/medicines/expiring'),
 };
 
@@ -113,6 +121,14 @@ export const agentAPI = {
 export const reportAPI = {
   getAll: () => api.get('/reports'),
   create: (data) => api.post('/reports', data),
+  update: (id, data) => api.put(`/reports/${id}`, data),
+};
+
+// Notifications
+export const notificationAPI = {
+  getAll: () => api.get('/notifications/'),
+  markAllRead: () => api.put('/notifications/mark-read'),
+  markOneRead: (id) => api.put(`/notifications/${id}/mark-read`),
 };
 
 export function extractData(response, key) {

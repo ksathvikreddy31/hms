@@ -17,7 +17,11 @@ class Billing(db.Model):
     patient = db.relationship('Patient', backref='billings')
 
     def to_dict(self):
+        patient_name = None
+        if self.patient and self.patient.user:
+            patient_name = self.patient.user.name
         return {'id': self.id, 'patient_id': self.patient_id,
+                'patient_name': patient_name,
                 'items': json.loads(self.items) if self.items else [],
                 'subtotal': self.subtotal, 'tax': self.tax,
                 'discount': self.discount, 'total': self.total,

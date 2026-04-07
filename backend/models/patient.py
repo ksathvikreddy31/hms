@@ -8,6 +8,7 @@ class Patient(db.Model):
     age = db.Column(db.Integer)
     gender = db.Column(db.String(10))
     blood_group = db.Column(db.String(5))
+    dob = db.Column(db.String(20))  # Date of birth as string YYYY-MM-DD
     bmi = db.Column(db.Float)
     conditions = db.Column(db.Text)  # JSON
     allergies = db.Column(db.Text)
@@ -23,6 +24,8 @@ class Patient(db.Model):
                 'name': self.user.name if self.user else None,
                 'email': self.user.email if self.user else None,
                 'age': self.age, 'gender': self.gender,
-                'blood_group': self.blood_group, 'bmi': self.bmi,
+                'blood_group': self.blood_group, 'dob': self.dob, 'bmi': self.bmi,
                 'conditions': json.loads(self.conditions) if self.conditions else [],
+                'allergies': self.allergies,
+                'emergency_contact': self.emergency_contact,
                 'lifestyle': json.loads(self.lifestyle) if self.lifestyle else {}}

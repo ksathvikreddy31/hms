@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { appointmentAPI, hospitalAPI, extractData } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,8 @@ import { Calendar, Clock, MapPin, UserRound, ArrowRight, CheckCircle2 } from 'lu
 
 const Appointments = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,6 +23,7 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState('');
   const [notes, setNotes] = useState('');
+  const [preselectedFromDept, setPreselectedFromDept] = useState(false);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'doctor';
 
@@ -29,6 +33,44 @@ const Appointments = () => {
       fetchDepartments();
     }
   }, []);
+
+  // Handle query params: auto-select department and optionally doctor
+  useEffect(() => {
+    const deptParam = searchParams.get('department');
+    const doctorParam = searchParams.get('doctor');
+
+    if (deptParam && !isAdmin) {
+      const dept = decodeURIComponent(deptParam);
+      setSelectedDept(dept);
+      setPreselectedFromDept(true);
+
+      // Fetch doctors for this department, then optionally pre-select doctor
+      const initFromDept = async () => {
+        try {
+          const res = await hospitalAPI.getDoctors(dept);
+          const docList = extractData(res, 'doctors') || [];
+          setDoctors(docList);
+
+          if (doctorParam) {
+            const docId = parseInt(doctorParam);
+            const matchedDoc = docList.find(d => d.id === docId);
+            if (matchedDoc) {
+              setSelectedDoctor(matchedDoc);
+              setStep(3); // Skip to date selection
+            } else {
+              setStep(2); // Doctor not found, let user pick
+            }
+          } else {
+            setStep(2); // No doctor specified, let user pick
+          }
+        } catch (err) {
+          console.error(err);
+          setStep(1); // Fallback to department selection
+        }
+      };
+      initFromDept();
+    }
+  }, [searchParams, isAdmin]);
 
   const fetchAppointments = async () => {
     try {
@@ -73,6 +115,7 @@ const Appointments = () => {
 
   const handleDeptSelect = (dept) => {
     setSelectedDept(dept);
+    setPreselectedFromDept(false);
     fetchDoctors(dept);
     setStep(2);
   };
@@ -99,7 +142,7 @@ const Appointments = () => {
   const handleBook = async () => {
     try {
       const payload = {
-        doctor_name: `Dr. ${selectedDoctor.name}`.replace('Dr. Dr.', 'Dr.'), // Ensure it has Dr. prefix but prevent duplicates
+        doctor_name: `Dr. ${selectedDoctor.name}`.replace('Dr. Dr.', 'Dr.'),
         department: selectedDept,
         date: selectedDate,
         time_slot: selectedSlot,
@@ -123,6 +166,7 @@ const Appointments = () => {
     setSelectedDate('');
     setSelectedSlot('');
     setNotes('');
+    setPreselectedFromDept(false);
   };
 
   const handleCancel = async (id) => {
@@ -136,6 +180,26 @@ const Appointments = () => {
     }
   };
 
+  // Build stepper labels — when coming from department page, show department as pre-filled
+  const getStepperLabels = () => {
+    if (preselectedFromDept) {
+      return ['Doctor', 'Date', 'Time Slot', 'Confirm'];
+    }
+    return ['Department', 'Doctor', 'Date', 'Time Slot', 'Confirm'];
+  };
+
+  // Map actual step to display step index for the stepper
+  const getDisplayStep = () => {
+    if (preselectedFromDept) {
+      // Steps 2,3,4,5,6 map to display 1,2,3,4,5
+      return step - 1;
+    }
+    return step;
+  };
+
+  const stepperLabels = getStepperLabels();
+  const displayStep = getDisplayStep();
+
   return (
     <div className="animate-fade-in">
       <TopBar title="Appointments" subtitle={isAdmin ? "Manage all hospital appointments" : "Book and manage your appointments"} />
@@ -145,19 +209,24 @@ const Appointments = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <Calendar className="w-6 h-6 text-primary-600" />
             Book a New Appointment
+            {preselectedFromDept && selectedDept && (
+              <span className="ml-3 text-sm font-medium px-3 py-1 rounded-full bg-primary-100 text-primary-700">
+                {selectedDept}
+              </span>
+            )}
           </h2>
           
           {/* Stepper */}
           <div className="flex items-center mb-8 bg-gray-50 p-4 rounded-xl overflow-x-auto">
-            {['Department', 'Doctor', 'Date', 'Time Slot', 'Confirm'].map((label, idx) => (
+            {stepperLabels.map((label, idx) => (
               <React.Fragment key={idx}>
-                <div className={`flex flex-col items-center min-w-[80px] ${step > idx + 1 ? 'text-primary-600' : step === idx + 1 ? 'text-primary-600 font-bold' : 'text-gray-400'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${step >= idx + 1 ? 'bg-primary-100 text-primary-600' : 'bg-gray-200 text-gray-500'}`}>
-                    {step > idx + 1 ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                <div className={`flex flex-col items-center min-w-[80px] ${displayStep > idx + 1 ? 'text-primary-600' : displayStep === idx + 1 ? 'text-primary-600 font-bold' : 'text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${displayStep >= idx + 1 ? 'bg-primary-100 text-primary-600' : 'bg-gray-200 text-gray-500'}`}>
+                    {displayStep > idx + 1 ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
                   </div>
                   <span className="text-xs whitespace-nowrap">{label}</span>
                 </div>
-                {idx < 4 && <div className={`flex-1 h-1 mx-2 rounded ${step > idx + 1 ? 'bg-primary-500' : 'bg-gray-200'}`} />}
+                {idx < stepperLabels.length - 1 && <div className={`flex-1 h-1 mx-2 rounded ${displayStep > idx + 1 ? 'bg-primary-500' : 'bg-gray-200'}`} />}
               </React.Fragment>
             ))}
           </div>
@@ -166,7 +235,7 @@ const Appointments = () => {
             {step === 1 && (
               <div className="animate-slide-up grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {departments.map(dept => (
-                  <button key={dept} onClick={() => handleDeptSelect(dept)} className="p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex justify-between items-center text-left">
+                  <button key={dept} onClick={() => handleDeptSelect(dept)} className="p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex justify-between items-center text-left cursor-pointer">
                     <span className="font-medium text-gray-800">{dept}</span>
                     <ArrowRight className="w-4 h-4 text-gray-400" />
                   </button>
@@ -176,10 +245,17 @@ const Appointments = () => {
 
             {step === 2 && (
               <div className="animate-slide-up">
-                <button onClick={() => setStep(1)} className="text-sm text-primary-600 font-medium mb-4">&larr; Back to Departments</button>
+                {preselectedFromDept ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                    <MapPin className="w-4 h-4" />
+                    <span>Booking for <strong className="text-gray-900">{selectedDept}</strong> department</span>
+                  </div>
+                ) : (
+                  <button onClick={() => setStep(1)} className="text-sm text-primary-600 font-medium mb-4 cursor-pointer">&larr; Back to Departments</button>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {doctors.length === 0 ? <p className="text-gray-500 col-span-3">No doctors available in {selectedDept}.</p> : doctors.map(doc => (
-                    <button key={doc.id} onClick={() => handleDoctorSelect(doc)} className="p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex items-center gap-4 text-left">
+                    <button key={doc.id} onClick={() => handleDoctorSelect(doc)} className="p-4 rounded-xl border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-all flex items-center gap-4 text-left cursor-pointer">
                       <div className="w-12 h-12 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-lg font-bold">
                         {doc.name.charAt(0)}
                       </div>
@@ -195,7 +271,7 @@ const Appointments = () => {
 
             {step === 3 && (
               <div className="animate-slide-up max-w-md">
-                <button onClick={() => setStep(2)} className="text-sm text-primary-600 font-medium mb-4">&larr; Back to Doctors</button>
+                <button onClick={() => setStep(2)} className="text-sm text-primary-600 font-medium mb-4 cursor-pointer">&larr; Back to Doctors</button>
                 <div className="mb-4 text-gray-700 font-medium">Select a Date for Dr. {selectedDoctor?.name}:</div>
                 <input type="date" min={new Date().toISOString().split('T')[0]} value={selectedDate} onChange={handleDateSelect} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
@@ -203,14 +279,14 @@ const Appointments = () => {
 
             {step === 4 && (
               <div className="animate-slide-up">
-                <button onClick={() => setStep(3)} className="text-sm text-primary-600 font-medium mb-4">&larr; Back to Date</button>
+                <button onClick={() => setStep(3)} className="text-sm text-primary-600 font-medium mb-4 cursor-pointer">&larr; Back to Date</button>
                 <div className="mb-4 text-gray-700 font-medium">Available Slots on {selectedDate}:</div>
                 {slots.length === 0 ? (
                    <p className="text-gray-500">No slots available for this date. Please choose another date.</p>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                     {slots.map(slot => (
-                      <button key={slot} onClick={() => handleSlotSelect(slot)} className="py-2 px-3 bg-white rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 transition">
+                      <button key={slot} onClick={() => handleSlotSelect(slot)} className="py-2 px-3 bg-white rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-primary-50 hover:border-primary-500 hover:text-primary-700 transition cursor-pointer">
                         {slot}
                       </button>
                     ))}
@@ -241,8 +317,8 @@ const Appointments = () => {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <button onClick={() => setStep(4)} className="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50">Back</button>
-                  <button onClick={handleBook} className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 shadow-sm">Confirm Booking</button>
+                  <button onClick={() => setStep(4)} className="flex-1 py-3 bg-white border border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 cursor-pointer">Back</button>
+                  <button onClick={handleBook} className="flex-1 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 shadow-sm cursor-pointer">Confirm Booking</button>
                 </div>
               </div>
             )}
@@ -254,7 +330,7 @@ const Appointments = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Appointment Confirmed!</h3>
                 <p className="text-gray-500 mb-6 max-w-md mx-auto">Your appointment has been successfully scheduled. We have recorded your request.</p>
-                <button onClick={resetBooking} className="px-6 py-2 border border-gray-200 rounded-xl font-medium hover:bg-gray-50">Book Another</button>
+                <button onClick={resetBooking} className="px-6 py-2 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 cursor-pointer">Book Another</button>
               </div>
             )}
           </div>
@@ -276,7 +352,7 @@ const Appointments = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                  {isAdmin && <th className="p-4 font-semibold">Patient ID</th>}
+                  {isAdmin && <th className="p-4 font-semibold">Patient</th>}
                   <th className="p-4 font-semibold">Doctor</th>
                   <th className="p-4 font-semibold">Department</th>
                   <th className="p-4 font-semibold">Date & Time</th>
@@ -287,7 +363,10 @@ const Appointments = () => {
               <tbody className="divide-y divide-gray-100">
                 {appointments.map(appt => (
                   <tr key={appt.id} className="hover:bg-gray-50 transition-colors">
-                    {isAdmin && <td className="p-4 text-sm font-medium text-gray-900">#{appt.patient_id}</td>}
+                    {isAdmin && <td className="p-4 text-sm text-gray-900">
+                      <div className="font-medium">{appt.patient_name || 'N/A'}</div>
+                      <div className="text-xs text-gray-400">ID: #{appt.patient_id}</div>
+                    </td>}
                     <td className="p-4 text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <UserRound className="w-4 h-4 text-gray-400" />
@@ -310,7 +389,7 @@ const Appointments = () => {
                     </td>
                     <td className="p-4">
                       {appt.status === 'scheduled' && (
-                        <button onClick={() => handleCancel(appt.id)} className="text-sm text-rose-600 hover:text-rose-800 font-medium">Cancel</button>
+                        <button onClick={() => handleCancel(appt.id)} className="text-sm text-rose-600 hover:text-rose-800 font-medium cursor-pointer">Cancel</button>
                       )}
                     </td>
                   </tr>
