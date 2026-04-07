@@ -22,6 +22,11 @@ def get_slots():
     if not doctor:
         return jsonify({'message': 'Doctor not found', 'data': None}), 404
         
+    if doctor.status == 'inactive':
+        return jsonify({'message': 'Doctor is currently unavailable', 'data': {'slots': []}})
+    if doctor.unavailable_date and str(doctor.unavailable_date) == date_str:
+        return jsonify({'message': 'Doctor is unavailable on this date', 'data': {'slots': []}})
+        
     all_slots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM']
     
     from sqlalchemy import func
