@@ -16,8 +16,8 @@ import json
 import logging
 from typing import Any
 
-from backend.agents.openai_client import ask_llm
-from backend.agents.tools import (
+from agents.openai_client import ask_llm
+from agents.tools import (
     get_all_patients,
     get_hospital_stats,
     get_finance_records,

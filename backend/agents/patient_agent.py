@@ -14,8 +14,8 @@ import json
 import logging
 from typing import Any
 
-from backend.agents.openai_client import ask_llm
-from backend.agents.tools import get_available_doctors, get_patient_reports, get_billing_data
+from agents.openai_client import ask_llm
+from agents.tools import get_available_doctors, get_patient_reports, get_billing_data
 
 logger = logging.getLogger("agents.patient_agent")
 

@@ -21,18 +21,18 @@ import time
 from datetime import datetime
 from typing import Any
 
-from backend.agents.openai_client import ask_llm
+from agents.openai_client import ask_llm
 
 # Agent imports
-from backend.agents.patient_agent import (
+from agents.patient_agent import (
     smart_appointment,
     report_explainer,
     medication_reminder,
     billing_explainer,
 )
-from backend.agents.emergency_agent import detect_emergency
-from backend.agents.voice_agent import process_voice
-from backend.agents.admin_agent import (
+from agents.emergency_agent import detect_emergency
+from agents.voice_agent import process_voice
+from agents.admin_agent import (
     patient_summary,
     revenue_agent,
     resource_agent,
@@ -42,7 +42,7 @@ from backend.agents.admin_agent import (
 )
 
 # Tools imports
-from backend.agents.tools import (
+from agents.tools import (
     get_patient_data,
     get_all_patients,
     get_billing_data,

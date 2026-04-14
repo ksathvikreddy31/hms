@@ -12,7 +12,7 @@ import json
 import logging
 from typing import Any
 
-from backend.agents.openai_client import ask_llm
+from agents.openai_client import ask_llm
 
 logger = logging.getLogger("agents.voice_agent")
 
