@@ -2,18 +2,21 @@ from flask import Flask
 from flask_cors import CORS
 from config import Config
 from extensions import db, jwt
+import os
 
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Extensions
+    # Enable CORS
     CORS(app, supports_credentials=True)
+
+    # Initialize extensions
     db.init_app(app)
     jwt.init_app(app)
 
-    # Disable strict slashes globally to prevent 308 redirects on missing trailing slashes
+    # Avoid trailing slash issues
     app.url_map.strict_slashes = False
 
     # Register Blueprints
@@ -43,14 +46,25 @@ def create_app(config_class=Config):
     app.register_blueprint(reports_bp, url_prefix='/api/reports')
     app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 
-    # Create tables
+    # Health check route (VERY IMPORTANT for Azure)
+    @app.route("/")
+    def home():
+        return "🚀 Hospital AI Backend Running"
+
+    # Create tables (OK for demo, not production best practice)
     with app.app_context():
-        from models import user, patient, appointment, staff, bed, equipment, medicine, billing, payment, finance, report, notification
+        from models import (
+            user, patient, appointment, staff, bed,
+            equipment, medicine, billing, payment,
+            finance, report, notification
+        )
         db.create_all()
 
     return app
 
 
+# Local run only (Azure uses gunicorn)
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

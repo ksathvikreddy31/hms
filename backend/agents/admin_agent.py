@@ -269,7 +269,7 @@ def ceo_agent(data: dict | None = None) -> dict:
 
 def add_staff_member(staff_data: dict) -> dict:
     """Add a new staff member to the hospital."""
-    from agents.tools import add_staff_db
+    from backend.agents.tools import add_staff_db
 
     result = add_staff_db(staff_data)
 
@@ -299,7 +299,7 @@ def add_staff_member(staff_data: dict) -> dict:
 
 def add_medicine_item(medicine_data: dict) -> dict:
     """Add a new medicine to the inventory."""
-    from agents.tools import add_medicine_db
+    from backend.agents.tools import add_medicine_db
 
     result = add_medicine_db(medicine_data)
 
@@ -329,7 +329,7 @@ def add_medicine_item(medicine_data: dict) -> dict:
 
 def edit_medicine_item(medicine_id: int, medicine_data: dict) -> dict:
     """Update an existing medicine record."""
-    from agents.tools import update_medicine_db
+    from backend.agents.tools import update_medicine_db
 
     result = update_medicine_db(medicine_id, medicine_data)
 
@@ -421,7 +421,7 @@ def cancel_appointment_admin(appointment_data: dict) -> dict:
 
 def register_new_patient(patient_data: dict) -> dict:
     """Register a new patient in the system."""
-    from agents.tools import register_patient_db
+    from backend.agents.tools import register_patient_db
 
     result = register_patient_db(patient_data)
 
@@ -451,7 +451,7 @@ def register_new_patient(patient_data: dict) -> dict:
 
 def add_patient_report(report_data: dict, patient_id: int) -> dict:
     """Add a medical report for a patient."""
-    from agents.tools import add_report_db
+    from backend.agents.tools import add_report_db
 
     result = add_report_db(report_data, patient_id)
 
@@ -481,7 +481,7 @@ def add_patient_report(report_data: dict, patient_id: int) -> dict:
 
 def generate_patient_bill(bill_data: dict, patient_id: int) -> dict:
     """Generate a bill for patient services."""
-    from agents.tools import generate_bill_db
+    from backend.agents.tools import generate_bill_db
 
     result = generate_bill_db(bill_data, patient_id)
 

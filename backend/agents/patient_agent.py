@@ -93,7 +93,7 @@ Analyse the symptoms and return **valid JSON** with:
 # -----------------------------------------------------------------------
 def medicine_inventory() -> dict:
     """Return the current medicine inventory from the hospital database."""
-    from agents.tools import get_medicines
+    from backend.agents.tools import get_medicines
 
     medicines = get_medicines()
     if not medicines:
@@ -168,7 +168,7 @@ def medication_reminder(meds: list[dict] | str) -> dict:
 
     Will search the database for available medicines if a string query is provided.
     """
-    from agents.tools import search_medicines, get_medicines
+    from backend.agents.tools import search_medicines, get_medicines
     db_medicines = []
     is_general_list = any(x in str(meds).lower() for x in ["list", "available", "store", "all", "inventory"])
     
@@ -260,7 +260,7 @@ Explain the bill in patient-friendly language as JSON:
 # -----------------------------------------------------------------------
 def cancel_appointment_patient(appointment_data: dict | None = None, patient_id: int | None = None) -> dict:
     """Allow patients to cancel their appointments with confirmation."""
-    from agents.tools import get_appointments, cancel_appointment_db
+    from backend.agents.tools import get_appointments, cancel_appointment_db
 
     if not patient_id:
         return {
