@@ -13,8 +13,8 @@ import logging
 import re
 from typing import Any
 
-from agents.openai_client import ask_llm
-from agents.tools import get_available_doctors, get_bed_status
+from backend.agents.openai_client import ask_llm
+from backend.agents.tools import get_available_doctors, get_bed_status
 
 logger = logging.getLogger("agents.emergency_agent")
 

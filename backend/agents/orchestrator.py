@@ -21,18 +21,18 @@ import time
 from datetime import datetime
 from typing import Any
 
-from agents.openai_client import ask_llm
+from backend.agents.openai_client import ask_llm
 
 # Agent imports
-from agents.patient_agent import (
+from backend.agents.patient_agent import (
     smart_appointment,
     report_explainer,
     medication_reminder,
     billing_explainer,
 )
-from agents.emergency_agent import detect_emergency
-from agents.voice_agent import process_voice
-from agents.admin_agent import (
+from backend.agents.emergency_agent import detect_emergency
+from backend.agents.voice_agent import process_voice
+from backend.agents.admin_agent import (
     patient_summary,
     revenue_agent,
     resource_agent,
@@ -42,7 +42,7 @@ from agents.admin_agent import (
 )
 
 # Tools imports
-from agents.tools import (
+from backend.agents.tools import (
     get_patient_data,
     get_all_patients,
     get_billing_data,
@@ -464,7 +464,7 @@ def _route_to_agent(intent: str, entities: dict, original_query: str) -> dict:
             return smart_appointment(symptoms, patient_id=pid)
 
         if intent == "cancel_appointment":
-            from agents.patient_agent import cancel_appointment_patient
+            from backend.agents.patient_agent import cancel_appointment_patient
             return cancel_appointment_patient(entities.get("appointment_data"), patient_id=pid)
 
         if intent == "explain_report":
@@ -473,7 +473,7 @@ def _route_to_agent(intent: str, entities: dict, original_query: str) -> dict:
             )
 
         if intent == "medicine_inventory":
-            from agents.patient_agent import medicine_inventory
+            from backend.agents.patient_agent import medicine_inventory
             return medicine_inventory()
 
         if intent == "medication_reminder":
@@ -506,34 +506,34 @@ def _route_to_agent(intent: str, entities: dict, original_query: str) -> dict:
 
         # ---- Admin operations ----
         if intent == "add_staff":
-            from agents.admin_agent import add_staff_member
+            from backend.agents.admin_agent import add_staff_member
             return add_staff_member(entities.get("staff_data"))
 
         if intent == "add_medicine":
-            from agents.admin_agent import add_medicine_item
+            from backend.agents.admin_agent import add_medicine_item
             return add_medicine_item(entities.get("medicine_data"))
 
         if intent == "edit_medicine":
-            from agents.admin_agent import edit_medicine_item
+            from backend.agents.admin_agent import edit_medicine_item
             medicine_data = entities.get("medicine_data", {})
             medicine_id = medicine_data.get("id") or entities.get("medicine_id")
             return edit_medicine_item(medicine_id, medicine_data)
 
         if intent == "cancel_appointment_admin":
-            from agents.admin_agent import cancel_appointment_admin
+            from backend.agents.admin_agent import cancel_appointment_admin
             return cancel_appointment_admin(entities.get("appointment_data"))
 
         if intent == "register_patient":
-            from agents.admin_agent import register_new_patient
+            from backend.agents.admin_agent import register_new_patient
             return register_new_patient(entities.get("patient_data"))
 
         if intent == "add_report":
-            from agents.admin_agent import add_patient_report
+            from backend.agents.admin_agent import add_patient_report
             report_patient_id = entities.get("patient_id") or entities.get("report_data", {}).get("patient_id")
             return add_patient_report(entities.get("report_data"), patient_id=report_patient_id)
 
         if intent == "generate_bill":
-            from agents.admin_agent import generate_patient_bill
+            from backend.agents.admin_agent import generate_patient_bill
             bill_patient_id = entities.get("patient_id") or entities.get("bill_data", {}).get("patient_id")
             return generate_patient_bill(entities.get("bill_data"), patient_id=bill_patient_id)
 

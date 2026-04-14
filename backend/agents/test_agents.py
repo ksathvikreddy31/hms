@@ -75,7 +75,7 @@ def main():
 
         # -- TEST 1: OpenAI Connection ------------------------------------
         print("\n[BLOCK 1] OPENAI CONNECTION")
-        from agents.openai_client import ask_llm
+        from backend.agents.openai_client import ask_llm
         run_test(
             "OpenAI - basic ping",
             ask_llm,
@@ -84,7 +84,7 @@ def main():
 
         # -- TEST 2: Tools (Database Bridge) ------------------------------
         print("\n[BLOCK 2] TOOLS - DATABASE BRIDGE")
-        import agents.tools as tools
+        import backend.agents.tools as tools
 
         run_test("tools - get_hospital_stats", tools.get_hospital_stats)
         run_test("tools - get_all_patients", tools.get_all_patients)
@@ -95,7 +95,7 @@ def main():
 
         # -- TEST 3: Emergency Agent --------------------------------------
         print("\n[BLOCK 3] EMERGENCY AGENT")
-        from agents.emergency_agent import detect_emergency
+        from backend.agents.emergency_agent import detect_emergency
 
         run_test(
             "Emergency - chest pain (MUST return EMERGENCY)",
@@ -115,7 +115,7 @@ def main():
 
         # -- TEST 4: Patient Agent ----------------------------------------
         print("\n[BLOCK 4] PATIENT AGENT")
-        from agents.patient_agent import (
+        from backend.agents.patient_agent import (
             smart_appointment,
             report_explainer,
             medication_reminder,
@@ -152,7 +152,7 @@ def main():
 
         # -- TEST 5: Voice Agent ------------------------------------------
         print("\n[BLOCK 5] VOICE AGENT")
-        from agents.voice_agent import process_voice
+        from backend.agents.voice_agent import process_voice
 
         run_test(
             "Voice - book appointment intent",
@@ -177,7 +177,7 @@ def main():
 
         # -- TEST 6: Admin Agent ------------------------------------------
         print("\n[BLOCK 6] ADMIN AGENT")
-        from agents.admin_agent import (
+        from backend.agents.admin_agent import (
             patient_summary,
             revenue_agent,
             resource_agent,
@@ -196,7 +196,7 @@ def main():
 
         # -- TEST 7: Orchestrator (Main Entry Point) ----------------------
         print("\n[BLOCK 7] ORCHESTRATOR - handle_query()")
-        from agents.orchestrator import handle_query
+        from backend.agents.orchestrator import handle_query
 
         run_test(
             "Orchestrator - patient chest pain -> emergency route",

@@ -12,7 +12,7 @@ import json
 import logging
 from typing import Any
 
-from agents.openai_client import ask_llm
+from backend.agents.openai_client import ask_llm
 
 logger = logging.getLogger("agents.voice_agent")
 
@@ -100,54 +100,54 @@ Return **valid JSON**:
 
     try:
         if intent == "book_appointment":
-            from agents.patient_agent import smart_appointment
+            from backend.agents.patient_agent import smart_appointment
             symptoms = entities.get("symptoms") or entities.get("query") or text
             result = smart_appointment(symptoms, patient_id=entities.get("patient_id"))
 
         elif intent == "explain_report":
-            from agents.patient_agent import report_explainer
+            from backend.agents.patient_agent import report_explainer
             result = report_explainer(patient_id=entities.get("patient_id"))
 
         elif intent == "medication_reminder":
-            from agents.patient_agent import medication_reminder
+            from backend.agents.patient_agent import medication_reminder
             meds = entities.get("medication") or entities.get("query") or text
             result = medication_reminder(meds)
 
         elif intent == "medicine_inventory":
-            from agents.patient_agent import medicine_inventory
+            from backend.agents.patient_agent import medicine_inventory
             result = medicine_inventory()
 
         elif intent == "explain_bill":
-            from agents.patient_agent import billing_explainer
+            from backend.agents.patient_agent import billing_explainer
             result = billing_explainer(patient_id=entities.get("patient_id"))
 
         elif intent == "emergency":
-            from agents.emergency_agent import detect_emergency
+            from backend.agents.emergency_agent import detect_emergency
             result = detect_emergency(text)
 
         elif intent == "patient_summary":
-            from agents.admin_agent import patient_summary
+            from backend.agents.admin_agent import patient_summary
             result = patient_summary()
 
         elif intent == "revenue_report":
-            from agents.admin_agent import revenue_agent
+            from backend.agents.admin_agent import revenue_agent
             result = revenue_agent()
 
         elif intent == "resource_status":
-            from agents.admin_agent import resource_agent
+            from backend.agents.admin_agent import resource_agent
             result = resource_agent()
 
         elif intent == "operations_report":
-            from agents.admin_agent import operations_agent
+            from backend.agents.admin_agent import operations_agent
             result = operations_agent()
 
         elif intent == "full_patient_info":
-            from agents.admin_agent import full_patient_info
+            from backend.agents.admin_agent import full_patient_info
             pid = entities.get("patient_id") or 1
             result = full_patient_info(patient_id=pid)
 
         elif intent == "ceo_dashboard":
-            from agents.admin_agent import ceo_agent
+            from backend.agents.admin_agent import ceo_agent
             result = ceo_agent()
 
         else:
